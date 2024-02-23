@@ -15,7 +15,7 @@ public class Post {
     private Long id;
     private String title;
     private String username;
-    private int password;
+    private String password;
     private String content;
     private LocalDate date; // 날짜를 쉽게 다루고, 날짜 관련 연산이나 형식화도 간단하게 처리 가능.
 

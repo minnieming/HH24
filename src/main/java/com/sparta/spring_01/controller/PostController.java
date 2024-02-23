@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -44,7 +45,7 @@ public class PostController {
 
                     preparedStatement.setString(1, post.getTitle()); // 2. preparedStatement.setString 이 메서드로 ?의 1번째 자리에 들어갈것, 2번째 자리에 들어갈것을 넣어준다.
                     preparedStatement.setString(2, post.getUsername()); // 3. 여기서 memo는 위에 인스턴스화 해준 memo에서 가져온 것.
-                    preparedStatement.setInt(3, post.getPassword()); // 이걸 빼면 오류가 생긴다. DB에는 저장되지만 PostResponseDto에서 비밀번호 필드를 제외 했으므로 반환된 객체에는 비밀번호가 포함되지 않는다.
+                    preparedStatement.setString(3, post.getPassword()); // 이걸 빼면 오류가 생긴다. DB에는 저장되지만 PostResponseDto에서 비밀번호 필드를 제외 했으므로 반환된 객체에는 비밀번호가 포함되지 않는다.
                     preparedStatement.setString(4, post.getContent());
                     preparedStatement.setObject(5, post.getDate()); // LocalDate는 JDBC에서 직접적으로 지원하는 데이터 유형이 아님. setObject 사용.
                     return preparedStatement;
@@ -106,6 +107,8 @@ public class PostController {
         Post post = findById(id);
         if (post != null) {
             // 게시글의 비밀번호 확인
+//            System.out.println(post.getPassword());
+//            System.out.println(requestDto.getPassword());
             if (Objects.equals(post.getPassword(), requestDto.getPassword())) {
                 // 비밀번호가 일치하면 게시글 내용 수정
                 String sql = "UPDATE post SET title = ?, username = ?, content = ? WHERE id = ?";
@@ -125,14 +128,14 @@ public class PostController {
     }
 
 
-
     // 게시글 삭제
-    @DeleteMapping("/post/{postId}")
-    public Long deletePost(@PathVariable Long id, @RequestParam String password) {
-
+    @DeleteMapping("/post/{id}")
+    public Long deletePost(@PathVariable Long id, @RequestBody Map<String, Object> requestBody) {
+        String password = (String) requestBody.get("password"); //password string으로 받음
         Post post = findById(id);
         if(post != null) {
-            if (Objects.equals(post.getPassword(), password)){
+            String postPassword = post.getPassword();
+            if (post.getPassword() != null && postPassword.equals(password)){
                 String sql = "DELETE FROM post WHERE id = ?";
                 jdbcTemplate.update(sql, id); // 2. update 사용해서 ?자리에 넣어주면 된다. (위의 내용 참고)
 
@@ -145,6 +148,7 @@ public class PostController {
         }
     }
 
+
     // findById 메서드
     private Post findById(Long id) { // DB에 존재하는지 찾는 기능. 메서드로 따로 빼서 여기저기 사용 할 수 있게 해놨다.
         // DB 조회
@@ -155,6 +159,7 @@ public class PostController {
                 Post post = new Post(); // post 타입으로 들어간다 (이건 사용자에 맞게 변경하면 될것 같다)
                 post.setTitle (resultSet.getString("title"));
                 post.setUsername (resultSet.getString("username"));
+                post.setPassword (resultSet.getString("password"));
                 post.setContent (resultSet.getString("content"));
                 post.setDate (resultSet.getDate("date").toLocalDate());
                 return post;

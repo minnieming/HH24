@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public class PostRequestDto {
     private String title;
     private String username;
-    private int password;
+    private String password;
     private String content;
     private LocalDate date;
 }
